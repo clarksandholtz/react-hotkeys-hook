@@ -10,6 +10,7 @@ export type Options = {
   scope?: string;
   keyup?: boolean;
   keydown?: boolean;
+  memoiseCallback?: boolean;
 };
 
 export function useHotkeys(keys: string, callback: KeyHandler, options?: Options): void;
@@ -21,9 +22,9 @@ export function useHotkeys(keys: string, callback: KeyHandler, options?: any[] |
     options = undefined;
   }
 
-  const {enableOnTags, filter} = options || {};
+  const {enableOnTags, filter, memoiseCallback = true} = options || {};
 
-  const memoisedCallback = useCallback(callback, deps || []);
+  const keyHandlerCallback = memoiseCallback ? useCallback(callback, deps || []) : callback;
 
   useEffect(() => {
     if (options && (options as Options).enableOnTags) {
@@ -37,8 +38,8 @@ export function useHotkeys(keys: string, callback: KeyHandler, options?: any[] |
 
     if (filter) hotkeys.filter = filter;
 
-    hotkeys(keys, (options as Options) || {}, memoisedCallback);
+    hotkeys(keys, (options as Options) || {}, keyHandlerCallback);
 
-    return () => hotkeys.unbind(keys, memoisedCallback);
-  }, [memoisedCallback, options]);
+    return () => hotkeys.unbind(keys, keyHandlerCallback);
+  }, [keyHandlerCallback, options]);
 }
